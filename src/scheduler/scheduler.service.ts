@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { AppsService } from '../apps/apps.service';
 import { ChecksService } from '../checks/checks.service';
 import { EventsGateway } from '../events/events.gateway';
@@ -13,6 +14,7 @@ export class SchedulerService {
     private readonly appsService: AppsService,
     private readonly checksService: ChecksService,
     private readonly eventsGateway: EventsGateway,
+    private readonly configService: ConfigService,
   ) { }
 
   @Cron('*/10 * * * * *') //10 segundos
@@ -51,7 +53,8 @@ export class SchedulerService {
     let statusCode = 0;
 
     try {
-      const response = await axios.get(app.url, { timeout: 5000 });
+      const timeout = this.configService.get<number>('AXIOS_TIMEOUT') || 5000;
+      const response = await axios.get(app.url, { timeout });
       statusCode = response.status;
       success = true;
     } catch (error: any) {
