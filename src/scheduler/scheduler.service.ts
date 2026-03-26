@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { AppsService } from '../apps/apps.service';
 import { ChecksService } from '../checks/checks.service';
+import { EventsGateway } from '../events/events.gateway';
 import axios from 'axios';
 
 @Injectable()
@@ -11,7 +12,8 @@ export class SchedulerService {
   constructor(
     private readonly appsService: AppsService,
     private readonly checksService: ChecksService,
-  ) {}
+    private readonly eventsGateway: EventsGateway,
+  ) { }
 
   @Cron('*/10 * * * * *') //10 segundos
   async handleCron() {
@@ -21,7 +23,7 @@ export class SchedulerService {
     for (const app of apps) {
       if (this.shouldPingApp(app, now)) {
         // Run asynchronously so it doesn't block other app pings
-        this.pingApp(app).catch((err) => this.logger.error(err));
+        this.pingApp(app).catch(err => this.logger.error(err));
       }
     }
   }
@@ -72,8 +74,13 @@ export class SchedulerService {
     });
 
     await this.checksService.create(app, success, responseTime, statusCode);
-    this.logger.log(
-      `Pinged ${app.name} (${app.url}) - Status: ${statusCode} - Success: ${success}`,
-    );
+    this.logger.log(`Pinged ${app.name} (${app.url}) - Status: ${statusCode} - Success: ${success}`);
+
+    // Emit live update to the dashboard
+    this.eventsGateway.emitAppUpdate(app.id, {
+      status: success ? 'up' : 'down',
+      lastCheck: new Date(app.lastCheck).toLocaleString(),
+      failureCount: app.failureCount,
+    });
   }
 }

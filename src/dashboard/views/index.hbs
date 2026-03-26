@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keep-Alive Dashboard</title>
+  <title>Keep-Alive Dashboard - Live</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -66,6 +66,36 @@
       margin: 0;
       font-size: 1.5rem;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      background-color: var(--success-bg);
+      color: var(--success-text);
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      text-transform: uppercase;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background-color: #10b981;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
     button {
@@ -148,6 +178,7 @@
       font-size: 0.875rem;
       color: var(--text-main);
       border-bottom: 1px solid var(--border-color);
+      transition: background-color 0.5s ease;
     }
 
     tbody tr:last-child td {
@@ -292,6 +323,10 @@
       color: var(--text-muted);
       margin-bottom: 1.5rem;
     }
+    
+    .row-flash td {
+      background-color: #fefce8 !important;
+    }
   </style>
 </head>
 <body>
@@ -302,7 +337,10 @@
 
   <div class="container">
     <div class="page-header">
-      <h2>Applications</h2>
+      <h2>
+        Applications 
+        <div class="live-indicator"><div class="live-dot"></div> LIVE WS</div>
+      </h2>
       <button class="btn-primary" onclick="document.getElementById('addAppDialog').showModal()">
         <svg style="width:16px;height:16px;margin-right:6px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
         Add App
@@ -323,32 +361,32 @@
         </thead>
         <tbody>
           {{#each apps}}
-          <tr>
+          <tr id="app-row-{{this.id}}">
             <td>
               <div class="app-name">{{this.name}}</div>
             </td>
             <td>
               <a href="{{this.url}}" target="_blank" class="app-url">{{this.url}}</a>
             </td>
-            <td>
+            <td class="app-status">
               {{#if this.failureCount}}
                 <span class="status-badge status-down">Down</span>
               {{else}}
                 <span class="status-badge status-up">Operational</span>
               {{/if}}
             </td>
-            <td class="text-muted">
+            <td class="text-muted app-last-check">
               {{this.lastCheck}}
             </td>
-            <td class="text-muted">
+            <td class="text-muted app-failures">
               {{this.failureCount}}
             </td>
             <td>
               <div class="actions-flex">
-                <button class="btn-icon" onclick="openEditModal({{this.id}}, '{{this.name}}', '{{this.url}}', {{this.interval}}, {{this.expectedStatus}})" title="Edit">
+                <button class="btn-icon" onclick="window.openEditModal({{this.id}}, '{{this.name}}', '{{this.url}}', {{this.interval}}, {{this.expectedStatus}})" title="Edit">
                   <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                 </button>
-                <button class="btn-icon danger" onclick="deleteApp({{this.id}})" title="Delete">
+                <button class="btn-icon danger" onclick="window.deleteApp({{this.id}})" title="Delete">
                   <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
               </div>
@@ -362,7 +400,7 @@
               <div class="empty-state">
                 <svg style="width:48px;height:48px;color:#d1d5db;margin:0 auto 1rem auto;display:block;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 <p>No applications configured yet.</p>
-                <button class="btn-primary" onclick="document.getElementById('addAppDialog').showModal()">Get Started</button>
+                <button class="btn-primary" onclick="window.document.getElementById('addAppDialog').showModal()">Get Started</button>
               </div>
             </td>
           </tr>
@@ -397,7 +435,7 @@
         </div>
       </div>
       <div class="dialog-footer">
-        <button type="button" class="btn-outline" onclick="document.getElementById('addAppDialog').close()">Cancel</button>
+        <button type="button" class="btn-outline" onclick="window.document.getElementById('addAppDialog').close()">Cancel</button>
         <button type="submit" class="btn-primary" id="addAppSubmitBtn">Save Application</button>
       </div>
     </form>
@@ -429,12 +467,13 @@
         </div>
       </div>
       <div class="dialog-footer">
-        <button type="button" class="btn-outline" onclick="document.getElementById('editAppDialog').close()">Cancel</button>
+        <button type="button" class="btn-outline" onclick="window.document.getElementById('editAppDialog').close()">Cancel</button>
         <button type="submit" class="btn-primary" id="editAppSubmitBtn">Update Configuration</button>
       </div>
     </form>
   </dialog>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
     class DashboardController {
       constructor() {
@@ -446,6 +485,35 @@
         this.initEventListeners();
         this.setupBackdropClick('addAppDialog');
         this.setupBackdropClick('editAppDialog');
+        this.initSocket();
+      }
+
+      initSocket() {
+        if(typeof io === 'undefined') return;
+        
+        const socket = io();
+        socket.on('app_update', (data) => {
+          const row = document.getElementById(`app-row-${data.id}`);
+          if (!row) return;
+
+          const statusCell = row.querySelector('.app-status');
+          const lastCheckCell = row.querySelector('.app-last-check');
+          const failuresCell = row.querySelector('.app-failures');
+
+          if (statusCell) {
+            if (data.status === 'down') {
+              statusCell.innerHTML = '<span class="status-badge status-down">Down</span>';
+            } else {
+              statusCell.innerHTML = '<span class="status-badge status-up">Operational</span>';
+            }
+          }
+          if (lastCheckCell) lastCheckCell.textContent = data.lastCheck;
+          if (failuresCell) failuresCell.textContent = data.failureCount;
+
+          // Flash effect to highlight update visually
+          row.classList.add('row-flash');
+          setTimeout(() => row.classList.remove('row-flash'), 1000);
+        });
       }
 
       initEventListeners() {
@@ -543,10 +611,8 @@
       }
     }
 
-    // Initialize controller
+    // Initialize controller and expose necessary methods
     const dashboardApp = new DashboardController();
-    
-    // Expose necessary methods to global scope for inline HTML handlers like onclick="openEditModal(...)"
     window.openEditModal = dashboardApp.openEditModal.bind(dashboardApp);
     window.deleteApp = dashboardApp.deleteApp.bind(dashboardApp);
   </script>

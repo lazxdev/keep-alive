@@ -5,6 +5,7 @@ import { AppsModule } from './apps/apps.module';
 import { ChecksModule } from './checks/checks.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ChecksModule,
     SchedulerModule,
     DashboardModule,
+    EventsModule,
   ],
 })
 export class AppModule {}
