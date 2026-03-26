@@ -13,38 +13,34 @@ export class SchedulerService {
     private readonly checksService: ChecksService,
   ) {}
 
-  @Cron('*/10 * * * * *')
+  @Cron('*/10 * * * * *') //10 segundos
   async handleCron() {
     const apps = await this.appsService.findAll();
     const now = new Date();
 
     for (const app of apps) {
-      if (!app.enabled) continue;
-
-      let shouldPing = false;
-
-      if (!app.lastCheck) {
-        shouldPing = true;
-      } else {
-        const diffInSeconds = (now.getTime() - app.lastCheck.getTime()) / 1000;
-        let interval = app.interval;
-
-        if (app.failureCount > 0) {
-          interval = 30;
-        } else {
-          interval = Math.floor(Math.random() * (300 - 240 + 1)) + 240;
-        }
-
-        if (diffInSeconds >= interval) {
-          shouldPing = true;
-        }
-      }
-
-      if (shouldPing) {
+      if (this.shouldPingApp(app, now)) {
         // Run asynchronously so it doesn't block other app pings
-        this.pingApp(app).catch(err => this.logger.error(err));
+        this.pingApp(app).catch((err) => this.logger.error(err));
       }
     }
+  }
+
+  private shouldPingApp(app: any, now: Date): boolean {
+    if (!app.enabled) return false;
+    if (!app.lastCheck) return true;
+
+    const diffInSeconds = (now.getTime() - app.lastCheck.getTime()) / 1000;
+    const interval = this.calculateDynamicInterval(app);
+
+    return diffInSeconds >= interval;
+  }
+
+  private calculateDynamicInterval(app: any): number {
+    if (app.failureCount > 0) {
+      return 30;
+    }
+    return Math.floor(Math.random() * (300 - 240 + 1)) + 240;
   }
 
   private async pingApp(app: any) {
@@ -76,6 +72,8 @@ export class SchedulerService {
     });
 
     await this.checksService.create(app, success, responseTime, statusCode);
-    this.logger.log(`Pinged ${app.name} (${app.url}) - Status: ${statusCode} - Success: ${success}`);
+    this.logger.log(
+      `Pinged ${app.name} (${app.url}) - Status: ${statusCode} - Success: ${success}`,
+    );
   }
 }
