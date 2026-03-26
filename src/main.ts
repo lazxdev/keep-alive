@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { join } from 'path';
 
 async function bootstrap() {
@@ -13,6 +14,8 @@ async function bootstrap() {
     forbidNonWhitelisted: true,
     transform: true,
   }));
+  
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   app.setBaseViewsDir(join(process.cwd(), 'src', 'dashboard', 'views'));
   app.setViewEngine('hbs');
