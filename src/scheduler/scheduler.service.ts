@@ -79,11 +79,12 @@ export class SchedulerService {
     await this.checksService.create(app, success, responseTime, statusCode);
     this.logger.log(`Pinged ${app.name} (${app.url}) - Status: ${statusCode} - Success: ${success}`);
 
-    // Emit live update to the dashboard
-    this.eventsGateway.emitAppUpdate(app.id, {
-      status: success ? 'up' : 'down',
+    // Emit live update to the dashboard using strictly typed payload
+    const payload = {
+      status: success ? 'up' as const : 'down' as const,
       lastCheck: new Date(app.lastCheck).toLocaleString(),
       failureCount: app.failureCount,
-    });
+    };
+    this.eventsGateway.emitAppUpdate(app.id, payload);
   }
 }
