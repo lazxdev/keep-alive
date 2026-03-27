@@ -11,12 +11,6 @@ export class App {
   @Column()
   url: string;
 
-  @Column({ default: 300 })
-  interval: number;
-
-  @Column({ default: 200 })
-  expectedStatus: number;
-
   @Column({ default: true })
   enabled: boolean;
 

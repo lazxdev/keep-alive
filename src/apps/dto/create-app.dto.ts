@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsUrl,
-  IsNumber,
-  IsOptional,
-  IsBoolean,
-  Min,
-} from 'class-validator';
+import { IsString, IsUrl, IsOptional, IsBoolean } from 'class-validator';
 
 export class CreateAppDto {
   @IsString()
@@ -13,15 +6,6 @@ export class CreateAppDto {
 
   @IsUrl()
   url: string;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(10)
-  interval?: number;
-
-  @IsOptional()
-  @IsNumber()
-  expectedStatus?: number;
 
   @IsOptional()
   @IsBoolean()

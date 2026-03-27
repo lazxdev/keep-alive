@@ -5,6 +5,7 @@ import { AppsService } from '../apps/apps.service';
 import { ChecksService } from '../checks/checks.service';
 import { EventsGateway } from '../events/events.gateway';
 import { PingService } from './ping.service';
+import { App } from '../apps/app.entity';
 
 @Injectable()
 export class SchedulerService {
@@ -18,7 +19,7 @@ export class SchedulerService {
     private readonly pingService: PingService,
   ) { }
 
-  @Cron('*/10 * * * * *') //10 segundos
+  @Cron('*/10 * * * * *')
   async handleCron() {
     try {
       const apps = await this.appsService.findActive();
@@ -26,7 +27,6 @@ export class SchedulerService {
 
       for (const app of apps) {
         if (this.shouldPingApp(app, now)) {
-          // Run asynchronously so it doesn't block other app pings
           this.pingApp(app).catch(err => this.logger.error(`Error procesando ping para ${app.name}: ${err.message}`));
         }
       }
@@ -35,7 +35,7 @@ export class SchedulerService {
     }
   }
 
-  private shouldPingApp(app: any, now: Date): boolean {
+  private shouldPingApp(app: App, now: Date): boolean {
     if (!app.lastCheck) return true;
 
     const diffInSeconds = (now.getTime() - app.lastCheck.getTime()) / 1000;
@@ -44,14 +44,14 @@ export class SchedulerService {
     return diffInSeconds >= interval;
   }
 
-  private calculateDynamicInterval(app: any): number {
+  private calculateDynamicInterval(app: App): number {
     if (app.failureCount > 0) {
       return 30;
     }
     return Math.floor(Math.random() * (300 - 240 + 1)) + 240;
   }
 
-  private async pingApp(app: any) {
+  private async pingApp(app: App) {
     const timeout = this.configService.get<number>('AXIOS_TIMEOUT') || 5000;
     const { success, statusCode, responseTime } = await this.pingService.executePing(app.url, timeout);
 
@@ -75,7 +75,6 @@ export class SchedulerService {
     }
 
     try {
-      // Emit live update to the dashboard using strictly typed payload
       const payload = {
         status: success ? 'up' as const : 'down' as const,
         lastCheck: new Date(app.lastCheck).toLocaleString(),
@@ -91,7 +90,6 @@ export class SchedulerService {
   async cleanupOldChecks() {
     this.logger.log('Starting midnight cleanup of old check records...');
     try {
-      // Borrar registros con más de 2 días de antigüedad, según lo que pidió el usuario.
       const deletedCount = await this.checksService.deleteOldChecks(2);
       this.logger.log(`Cleanup complete. Deleted ${deletedCount} records older than 2 days.`);
     } catch (error: any) {

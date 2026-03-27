@@ -383,7 +383,7 @@
             </td>
             <td>
               <div class="actions-flex">
-                <button class="btn-icon" onclick="window.openEditModal({{this.id}}, '{{this.name}}', '{{this.url}}', {{this.interval}}, {{this.expectedStatus}})" title="Edit">
+                <button class="btn-icon" onclick="window.openEditModal({{this.id}}, '{{this.name}}', '{{this.url}}')" title="Edit">
                   <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                 </button>
                 <button class="btn-icon danger" onclick="window.deleteApp({{this.id}})" title="Delete">
@@ -425,14 +425,6 @@
           <label>URL</label>
           <input type="url" name="url" required placeholder="https://api.example.com/health">
         </div>
-        <div class="form-group">
-          <label>Check Interval (seconds)</label>
-          <input type="number" name="interval" value="300" required min="10">
-        </div>
-        <div class="form-group">
-          <label>Expected Status Code</label>
-          <input type="number" name="expectedStatus" value="200" required>
-        </div>
       </div>
       <div class="dialog-footer">
         <button type="button" class="btn-outline" onclick="window.document.getElementById('addAppDialog').close()">Cancel</button>
@@ -456,14 +448,6 @@
         <div class="form-group">
           <label>URL</label>
           <input type="url" name="url" id="edit-url" required>
-        </div>
-        <div class="form-group">
-          <label>Check Interval (seconds)</label>
-          <input type="number" name="interval" id="edit-interval" required min="10">
-        </div>
-        <div class="form-group">
-          <label>Expected Status Code</label>
-          <input type="number" name="expectedStatus" id="edit-expectedStatus" required>
         </div>
       </div>
       <div class="dialog-footer">
@@ -551,8 +535,6 @@
       getFormData(form) {
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
-        data.interval = parseInt(data.interval, 10);
-        data.expectedStatus = parseInt(data.expectedStatus, 10);
         return data;
       }
 
@@ -579,12 +561,10 @@
         btn.textContent = text;
       }
 
-      openEditModal(id, name, url, interval, expectedStatus) {
+      openEditModal(id, name, url) {
         document.getElementById('edit-id').value = id;
         document.getElementById('edit-name').value = name;
         document.getElementById('edit-url').value = url;
-        document.getElementById('edit-interval').value = interval;
-        document.getElementById('edit-expectedStatus').value = expectedStatus;
         document.getElementById('editAppDialog').showModal();
       }
 

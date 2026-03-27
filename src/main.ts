@@ -19,7 +19,9 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  app.setBaseViewsDir(join(process.cwd(), 'src', 'dashboard', 'views'));
+  // Works correctly in both `src/` (dev) and `dist/` (Docker production)
+  const viewsPath = join(__dirname, '..', 'src', 'dashboard', 'views');
+  app.setBaseViewsDir(viewsPath);
   app.setViewEngine('hbs');
 
   const configService = app.get(ConfigService);

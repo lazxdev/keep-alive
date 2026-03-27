@@ -12,18 +12,34 @@ export class AppsService {
     private appRepository: Repository<App>,
   ) {}
 
-  findAll() {
-    return this.appRepository.find();
+  async findAll() {
+    try {
+      return await this.appRepository.find();
+    } catch (error: unknown) {
+      this.logger.error(`Error fetching all apps: ${(error as Error).message}`);
+      throw new InternalServerErrorException('No se pudieron obtener las aplicaciones');
+    }
   }
 
-  findActive() {
-    return this.appRepository.find({ where: { enabled: true } });
+  async findActive() {
+    try {
+      return await this.appRepository.find({ where: { enabled: true } });
+    } catch (error: unknown) {
+      this.logger.error(`Error fetching active apps: ${(error as Error).message}`);
+      throw new InternalServerErrorException('No se pudieron obtener las aplicaciones activas');
+    }
   }
 
   async findOne(id: number) {
-    const app = await this.appRepository.findOne({ where: { id } });
-    if (!app) throw new NotFoundException(`App #${id} not found`);
-    return app;
+    try {
+      const app = await this.appRepository.findOne({ where: { id } });
+      if (!app) throw new NotFoundException(`App #${id} not found`);
+      return app;
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) throw error;
+      this.logger.error(`Error finding app ${id}: ${(error as Error).message}`);
+      throw new InternalServerErrorException('Error al buscar la aplicación');
+    }
   }
 
   async create(appData: Partial<App>) {

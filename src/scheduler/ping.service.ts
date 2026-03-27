@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import * as http from 'http';
 import * as https from 'https';
 
@@ -21,10 +21,11 @@ export class PingService {
         statusCode: response.status,
         responseTime: Date.now() - startTime,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
       return {
         success: false,
-        statusCode: error.response ? error.response.status : 0,
+        statusCode: axiosError.response ? axiosError.response.status : 0,
         responseTime: Date.now() - startTime,
       };
     }
