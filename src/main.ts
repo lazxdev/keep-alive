@@ -9,12 +9,14 @@ import { join } from 'path';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.use(require('cookie-parser')());
+
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
   }));
-  
+
   app.useGlobalFilters(new HttpExceptionFilter());
 
   app.setBaseViewsDir(join(process.cwd(), 'src', 'dashboard', 'views'));

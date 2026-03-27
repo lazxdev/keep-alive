@@ -7,6 +7,7 @@ import { ChecksModule } from './checks/checks.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { EventsModule } from './events/events.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { EventsModule } from './events/events.module';
     SchedulerModule,
     DashboardModule,
     EventsModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

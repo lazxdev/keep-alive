@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+# Batabase
+*.db
+
 # Logs
 logs
 *.log

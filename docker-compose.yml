@@ -1,0 +1,16 @@
+version: '1.0'
+
+services:
+  keepalive:
+    build: .
+    container_name: keep-alive-monitor
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PORT=3000
+      - DB_NAME=/app/data/keepalive.db
+      - AXIOS_TIMEOUT=5000
+      - NODE_ENV=production

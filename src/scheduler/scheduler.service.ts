@@ -4,22 +4,19 @@ import { ConfigService } from '@nestjs/config';
 import { AppsService } from '../apps/apps.service';
 import { ChecksService } from '../checks/checks.service';
 import { EventsGateway } from '../events/events.gateway';
-import axios from 'axios';
-import * as http from 'http';
-import * as https from 'https';
+import { PingService } from './ping.service';
 
 @Injectable()
 export class SchedulerService {
   private readonly logger = new Logger(SchedulerService.name);
-  private readonly httpAgent = new http.Agent({ keepAlive: true });
-  private readonly httpsAgent = new https.Agent({ keepAlive: true });
 
   constructor(
     private readonly appsService: AppsService,
     private readonly checksService: ChecksService,
     private readonly eventsGateway: EventsGateway,
     private readonly configService: ConfigService,
-  ) { }
+    private readonly pingService: PingService,
+  ) {}
 
   @Cron('*/10 * * * * *') //10 segundos
   async handleCron() {
@@ -55,25 +52,9 @@ export class SchedulerService {
   }
 
   private async pingApp(app: any) {
-    const startTime = Date.now();
-    let success = false;
-    let statusCode = 0;
+    const timeout = this.configService.get<number>('AXIOS_TIMEOUT') || 5000;
+    const { success, statusCode, responseTime } = await this.pingService.executePing(app.url, timeout);
 
-    try {
-      const timeout = this.configService.get<number>('AXIOS_TIMEOUT') || 5000;
-      const response = await axios.get(app.url, { 
-        timeout,
-        httpAgent: this.httpAgent,
-        httpsAgent: this.httpsAgent,
-      });
-      statusCode = response.status;
-      success = true;
-    } catch (error: any) {
-      statusCode = error.response ? error.response.status : 0;
-      success = false;
-    }
-
-    const responseTime = Date.now() - startTime;
     app.lastCheck = new Date();
 
     if (success) {
