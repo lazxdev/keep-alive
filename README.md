@@ -1,98 +1,126 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+<div align="center">
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# 🟢 Keep-Alive
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**Self-hosted uptime monitoring for developers. Deploy in 60 seconds with Docker.**
 
-## Description
+[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
+[![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+</div>
 
-## Project setup
+---
 
+## ✨ Features
+
+- 🔍 **Automatic HTTP monitoring** — pings your URLs at intelligent, dynamic intervals
+- ⚡ **Real-time dashboard** — live green/red status updates via WebSockets (no page refresh needed)
+- 🔒 **Built-in authentication** — login page with configurable credentials
+- 🗄️ **Persistent SQLite storage** — data survives container restarts via Docker volumes
+- 🧹 **Auto database cleanup** — automatically purges check history older than 2 days at midnight
+- 🐳 **One-command deployment** — single `docker compose up` to run anywhere
+
+---
+
+## 🚀 Quick Start (Docker)
+
+**1. Clone the repo**
 ```bash
-$ npm install
+git clone https://github.com/lazxdev/keep-alive.git
+cd keep-alive
 ```
 
-## Compile and run the project
-
+**2. Configure your environment**
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cp .env.example .env
+# Edit .env with your preferred credentials and secret
 ```
 
-## Run tests
-
+**3. Launch**
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up -d
 ```
 
-## Deployment
+That's it. Open `http://localhost:3000` and sign in.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## ⚙️ Configuration (`.env`)
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `3000` | Port the server listens on |
+| `DB_NAME` | `/app/data/keepalive.db` | Path to the SQLite database file |
+| `AXIOS_TIMEOUT` | `5000` | HTTP ping timeout in milliseconds |
+| `ADMIN_USERNAME` | `admin` | Dashboard login username |
+| `ADMIN_PASSWORD` | `admin` | Dashboard login password |
+| `JWT_SECRET` | `keepalive_secret_key` | Secret key for signing session tokens |
+
+> [!CAUTION]
+> Always change `ADMIN_PASSWORD` and `JWT_SECRET` before deploying to a public server.
+
+---
+
+## 📁 Data Persistence
+
+Your database is stored in the `./data/` folder on the host machine. This folder is mapped into the container via a Docker volume, so your monitored apps and check history are safe across restarts, updates, and re-deploys.
+
+```
+keep-alive/
+└── data/
+    └── keepalive.db   ← Your data lives here, safe on disk
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 🔌 REST API
 
-Check out a few resources that may come in handy when working with NestJS:
+All endpoints require authentication (JWT cookie).
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/apps` | List all monitored apps |
+| `POST` | `/apps` | Add a new app to monitor |
+| `PATCH` | `/apps/:id` | Update an app |
+| `DELETE` | `/apps/:id` | Remove an app and all its history |
 
-## Support
+**POST `/apps` body:**
+```json
+{
+  "name": "My API",
+  "url": "https://my-api.example.com/health",
+  "enabled": true
+}
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+## 🛠️ Running Locally (Development)
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+npm install
+cp .env.example .env
+npm run start:dev
+```
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 🏗️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | NestJS (TypeScript) |
+| Database | SQLite via TypeORM |
+| Real-time | Socket.io WebSockets |
+| HTTP Client | Axios with keepAlive agents |
+| Views | Handlebars (SSR) |
+| Auth | JWT via HTTP-only cookies |
+| Container | Docker (multi-stage, non-root) |
+
+---
+
+## 📄 License
+
+MIT — free to use, modify, and distribute.

@@ -16,7 +16,7 @@ export class SchedulerService {
     private readonly eventsGateway: EventsGateway,
     private readonly configService: ConfigService,
     private readonly pingService: PingService,
-  ) {}
+  ) { }
 
   @Cron('*/10 * * * * *') //10 segundos
   async handleCron() {
@@ -70,7 +70,6 @@ export class SchedulerService {
       });
 
       await this.checksService.create(app, success, responseTime, statusCode);
-      this.logger.log(`Pinged ${app.name} (${app.url}) - Status: ${statusCode} - Success: ${success}`);
     } catch (dbError: any) {
       this.logger.error(`Error guardando resultados del check de ${app.name} en BD: ${dbError.message}`);
     }

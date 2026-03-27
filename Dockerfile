@@ -21,7 +21,9 @@ COPY --from=builder /app/dist ./dist
 
 COPY --from=builder /app/src/dashboard/views ./src/dashboard/views
 
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data && chown -R node:node /app
+
+USER node
 
 ENV NODE_ENV=production
 ENV PORT=3000
