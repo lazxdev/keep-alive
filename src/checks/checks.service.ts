@@ -20,4 +20,18 @@ export class ChecksService {
     });
     return this.checkRepository.save(check);
   }
+
+  async deleteOldChecks(days: number) {
+    const thresholdDate = new Date();
+    thresholdDate.setDate(thresholdDate.getDate() - days);
+    
+    const result = await this.checkRepository
+      .createQueryBuilder()
+      .delete()
+      .from(Check)
+      .where("createdAt < :date", { date: thresholdDate })
+      .execute();
+      
+    return result.affected;
+  }
 }

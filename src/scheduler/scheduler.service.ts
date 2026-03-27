@@ -1,14 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { AppsService } from '../apps/apps.service';
 import { ChecksService } from '../checks/checks.service';
 import { EventsGateway } from '../events/events.gateway';
 import axios from 'axios';
+import * as http from 'http';
+import * as https from 'https';
 
 @Injectable()
 export class SchedulerService {
   private readonly logger = new Logger(SchedulerService.name);
+  private readonly httpAgent = new http.Agent({ keepAlive: true });
+  private readonly httpsAgent = new https.Agent({ keepAlive: true });
 
   constructor(
     private readonly appsService: AppsService,
@@ -19,7 +23,7 @@ export class SchedulerService {
 
   @Cron('*/10 * * * * *') //10 segundos
   async handleCron() {
-    const apps = await this.appsService.findAll();
+    const apps = await this.appsService.findActive();
     const now = new Date();
 
     for (const app of apps) {
@@ -31,7 +35,6 @@ export class SchedulerService {
   }
 
   private shouldPingApp(app: any, now: Date): boolean {
-    if (!app.enabled) return false;
     if (!app.lastCheck) return true;
 
     const diffInSeconds = (now.getTime() - app.lastCheck.getTime()) / 1000;
@@ -54,7 +57,11 @@ export class SchedulerService {
 
     try {
       const timeout = this.configService.get<number>('AXIOS_TIMEOUT') || 5000;
-      const response = await axios.get(app.url, { timeout });
+      const response = await axios.get(app.url, { 
+        timeout,
+        httpAgent: this.httpAgent,
+        httpsAgent: this.httpsAgent,
+      });
       statusCode = response.status;
       success = true;
     } catch (error: any) {
@@ -86,5 +93,17 @@ export class SchedulerService {
       failureCount: app.failureCount,
     };
     this.eventsGateway.emitAppUpdate(app.id, payload);
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async cleanupOldChecks() {
+    this.logger.log('Starting midnight cleanup of old check records...');
+    try {
+      // Borrar registros con más de 2 días de antigüedad, según lo que pidió el usuario.
+      const deletedCount = await this.checksService.deleteOldChecks(2);
+      this.logger.log(`Cleanup complete. Deleted ${deletedCount} records older than 2 days.`);
+    } catch (error: any) {
+      this.logger.error(`Error during DB checks cleanup: ${error.message}`, error.stack);
+    }
   }
 }

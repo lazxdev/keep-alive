@@ -14,6 +14,10 @@ export class AppsService {
     return this.appRepository.find();
   }
 
+  findActive() {
+    return this.appRepository.find({ where: { enabled: true } });
+  }
+
   async findOne(id: number) {
     const app = await this.appRepository.findOne({ where: { id } });
     if (!app) throw new NotFoundException(`App #${id} not found`);
