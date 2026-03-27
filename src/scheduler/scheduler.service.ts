@@ -23,14 +23,18 @@ export class SchedulerService {
 
   @Cron('*/10 * * * * *') //10 segundos
   async handleCron() {
-    const apps = await this.appsService.findActive();
-    const now = new Date();
+    try {
+      const apps = await this.appsService.findActive();
+      const now = new Date();
 
-    for (const app of apps) {
-      if (this.shouldPingApp(app, now)) {
-        // Run asynchronously so it doesn't block other app pings
-        this.pingApp(app).catch(err => this.logger.error(err));
+      for (const app of apps) {
+        if (this.shouldPingApp(app, now)) {
+          // Run asynchronously so it doesn't block other app pings
+          this.pingApp(app).catch(err => this.logger.error(`Error procesando ping para ${app.name}: ${err.message}`));
+        }
       }
+    } catch (error: any) {
+      this.logger.error(`Error crítico obteniendo apps activas en Cron: ${error.message}`);
     }
   }
 
@@ -78,21 +82,29 @@ export class SchedulerService {
       app.failureCount += 1;
     }
 
-    await this.appsService.update(app.id, {
-      failureCount: app.failureCount,
-      lastCheck: app.lastCheck,
-    });
+    try {
+      await this.appsService.update(app.id, {
+        failureCount: app.failureCount,
+        lastCheck: app.lastCheck,
+      });
 
-    await this.checksService.create(app, success, responseTime, statusCode);
-    this.logger.log(`Pinged ${app.name} (${app.url}) - Status: ${statusCode} - Success: ${success}`);
+      await this.checksService.create(app, success, responseTime, statusCode);
+      this.logger.log(`Pinged ${app.name} (${app.url}) - Status: ${statusCode} - Success: ${success}`);
+    } catch (dbError: any) {
+      this.logger.error(`Error guardando resultados del check de ${app.name} en BD: ${dbError.message}`);
+    }
 
-    // Emit live update to the dashboard using strictly typed payload
-    const payload = {
-      status: success ? 'up' as const : 'down' as const,
-      lastCheck: new Date(app.lastCheck).toLocaleString(),
-      failureCount: app.failureCount,
-    };
-    this.eventsGateway.emitAppUpdate(app.id, payload);
+    try {
+      // Emit live update to the dashboard using strictly typed payload
+      const payload = {
+        status: success ? 'up' as const : 'down' as const,
+        lastCheck: new Date(app.lastCheck).toLocaleString(),
+        failureCount: app.failureCount,
+      };
+      this.eventsGateway.emitAppUpdate(app.id, payload);
+    } catch (wsError: any) {
+      this.logger.error(`Error emitiendo evento WebSocket para ${app.name}: ${wsError.message}`);
+    }
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)

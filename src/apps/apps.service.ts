@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { App } from './app.entity';
 
 @Injectable()
 export class AppsService {
+  private readonly logger = new Logger(AppsService.name);
+
   constructor(
     @InjectRepository(App)
     private appRepository: Repository<App>,
@@ -24,18 +26,33 @@ export class AppsService {
     return app;
   }
 
-  create(appData: Partial<App>) {
-    const app = this.appRepository.create(appData);
-    return this.appRepository.save(app);
+  async create(appData: Partial<App>) {
+    try {
+      const app = this.appRepository.create(appData);
+      return await this.appRepository.save(app);
+    } catch (error: any) {
+      this.logger.error(`Error creating app: ${error.message}`);
+      throw new InternalServerErrorException('No se pudo crear la aplicación en base de datos');
+    }
   }
 
   async update(id: number, updateData: Partial<App>) {
-    await this.appRepository.update(id, updateData);
+    try {
+      await this.appRepository.update(id, updateData);
+    } catch (error: any) {
+      this.logger.error(`Error updating app ${id}: ${error.message}`);
+      throw new InternalServerErrorException('Error al actualizar la aplicación');
+    }
     return this.findOne(id);
   }
 
   async remove(id: number) {
     const app = await this.findOne(id);
-    return this.appRepository.remove(app);
+    try {
+      return await this.appRepository.remove(app);
+    } catch (error: any) {
+      this.logger.error(`Error removing app ${id}: ${error.message}`);
+      throw new InternalServerErrorException('Error al intentar eliminar la aplicación');
+    }
   }
 }
