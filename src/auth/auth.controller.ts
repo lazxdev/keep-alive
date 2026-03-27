@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Body, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Redirect, UseInterceptors, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
+import { LoginDto } from './dto/login.dto';
+import { LoginInterceptor } from './interceptors/login.interceptor';
 
 @Controller('login')
 export class AuthController {
@@ -12,17 +14,10 @@ export class AuthController {
   }
 
   @Post()
-  async login(@Body() body: Record<string, any>, @Res() res: Response) {
-    try {
-      const { access_token } = await this.authService.login(body.username, body.password);
-      res.cookie('Authentication', access_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-      });
-      return res.redirect('/');
-    } catch {
-      return res.render('login', { error: 'Invalid username or password' });
-    }
+  @UseInterceptors(LoginInterceptor)
+  @Redirect('/', HttpStatus.FOUND)
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto.username, loginDto.password);
   }
 
   @Post('logout')

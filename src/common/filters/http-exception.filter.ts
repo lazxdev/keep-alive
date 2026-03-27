@@ -15,8 +15,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    if (status === HttpStatus.UNAUTHORIZED && request.path === '/') {
-      return response.redirect('/login');
+    if (status === HttpStatus.UNAUTHORIZED) {
+      if (request.path === '/') {
+        return response.redirect('/login');
+      }
+      if (request.path === '/login' && request.method === 'POST') {
+        return response.render('login', { error: 'Credenciales inválidas o incompletas' });
+      }
     }
 
     let message = 'Internal server error';
